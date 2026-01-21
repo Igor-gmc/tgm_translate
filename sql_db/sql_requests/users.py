@@ -78,3 +78,87 @@ def create_user(session: Session, user_nikname: str) -> int | None:
     # Если пользователь найден
     print(f'Пользователь с таким именем уже существует в базе {db_user_id}')
     return None
+
+
+def get_or_create_user(session: Session, user_nickname: str) -> int | None:
+    """Получает существующего пользователя или создает нового.
+
+    Главная функция для работы с пользователями в боте.
+    Если пользователь существует — возвращает его id.
+    Если не существует — создает и возвращает id нового пользователя.
+
+    Args:
+        session (Session): Сессия подключения к БД
+        user_nickname (str): Телеграм никнейм пользователя
+
+    Returns:
+        int | None: id пользователя или None при ошибке
+    """
+    if user_nickname is None or not isinstance(user_nickname, str):
+        print('Ошибка: некорректный никнейм пользователя')
+        return None
+
+    # Пробуем найти существующего пользователя
+    user_id = get_user(session=session, user_nickname=user_nickname)
+
+    if user_id is not None:
+        print(f'Пользователь найден: {user_id}')
+        return user_id
+
+    # Если не найден — создаем нового
+    new_user = User(user_tg_nickname=user_nickname)
+    session.add(new_user)
+    session.flush()
+    user_id = new_user.id
+    print(f'Создан новый пользователь: {user_id}')
+    return user_id
+
+
+def delete_user(session: Session, user_id: int) -> bool:
+    """Удаляет пользователя и все связанные с ним данные.
+
+    Используется когда пользователь отключает бота.
+    Каскадно удаляет: прогресс обучения, попытки, избранное, личные слова.
+
+    Args:
+        session (Session): Сессия подключения к БД
+        user_id (int): id пользователя в базе
+
+    Returns:
+        bool: True если удаление успешно, False при ошибке
+    """
+    from sql_db.models import UserTranslationProgress, UserAttempt, UserFavorite, Translate
+
+    # Проверяем существование пользователя
+    user = session.get(User, user_id)
+    if user is None:
+        print(f'Пользователь {user_id} не найден')
+        return False
+
+    # Удаляем связанные данные
+    # 1. Прогресс обучения
+    session.query(UserTranslationProgress).filter(
+        UserTranslationProgress.user_id == user_id
+    ).delete()
+
+    # 2. История попыток
+    session.query(UserAttempt).filter(
+        UserAttempt.user_id == user_id
+    ).delete()
+
+    # 3. Избранное
+    session.query(UserFavorite).filter(
+        UserFavorite.user_id == user_id
+    ).delete()
+
+    # 4. Личные слова пользователя (Translate с owner_user = user_id)
+    session.query(Translate).filter(
+        Translate.owner_user == user_id
+    ).delete()
+
+    # 5. Удаляем самого пользователя
+    session.delete(user)
+    session.flush()
+
+    print(f'Пользователь {user_id} и все его данные удалены')
+    return True
