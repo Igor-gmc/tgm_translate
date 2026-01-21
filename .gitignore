@@ -342,3 +342,6 @@ huggingface/
 
 # Transformers cache
 transformers_cache/
+
+nul
+nul-
