@@ -55,20 +55,15 @@ def send_word_question(chat_id: int, user_tg_id: int):
     with get_session() as session:
         wrong_options = get_wrong_options(session, translate_id, count=3)
 
-    # Формируем текст вопроса
-    word_en = current_word['word_en']
-    transcription = current_word.get('transcription')
+    # Формируем текст вопроса (показываем русское слово)
+    word_ru = current_word['word_ru']
 
-    if transcription:
-        question_text = f'📖 Переведи слово:\n\n*{word_en}* [{transcription}]'
-    else:
-        question_text = f'📖 Переведи слово:\n\n*{word_en}*'
-
+    question_text = f'📖 Переведи слово:\n\n*{word_ru}*'
     question_text += f'\n\n_{current_index + 1} из {len(words)}_'
 
-    # Создаем клавиатуру с ответами
+    # Создаем клавиатуру с ответами (английские варианты)
     keyboard = get_answer_keyboard(
-        current_word['word_ru'],
+        current_word['word_en'],
         wrong_options,
         translate_id
     )

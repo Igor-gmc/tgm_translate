@@ -10,7 +10,7 @@ def get_answer_keyboard(correct_word: str, wrong_words: list[str],
     """Создает клавиатуру с вариантами ответов.
 
     Args:
-        correct_word (str): Правильный ответ (русский перевод)
+        correct_word (str): Правильный ответ (английское слово)
         wrong_words (list[str]): Список неправильных вариантов
         translate_id (int): id пары слов для проверки
 

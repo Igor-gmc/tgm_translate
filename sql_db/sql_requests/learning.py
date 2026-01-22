@@ -341,18 +341,18 @@ def get_wrong_options(session: Session, correct_translate_id: int, count: int = 
         count (int): Количество неправильных вариантов
 
     Returns:
-        list[str]: Список неправильных русских переводов
+        list[str]: Список неправильных английских слов
     """
     # Получаем правильный перевод для исключения
     correct = session.get(Translate, correct_translate_id)
     if correct is None:
         return []
 
-    correct_ru_id = correct.word_r
+    correct_en_id = correct.word_e
 
-    # Выбираем случайные русские слова, кроме правильного
-    stmt = select(WordRu).where(
-        WordRu.id != correct_ru_id
+    # Выбираем случайные английские слова, кроме правильного
+    stmt = select(WordEn).where(
+        WordEn.id != correct_en_id
     ).order_by(func.random()).limit(count)
 
     wrong_words = session.execute(stmt).scalars().all()
